@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>RankASco Demo</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .bar { fill: steelblue; }
+    </style>
+</head>
+<body>
+    <h1>Ranking Demo</h1>
+    <div id="chart"></div>
+    <script>
+        async function fetchData() {
+            const response = await fetch('/items');
+            const data = await response.json();
+            return data;
+        }
+
+        function draw(data) {
+            const width = 500;
+            const height = 300;
+            const margin = {top: 20, right: 20, bottom: 30, left: 40};
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.name))
+                .range([margin.left, width - margin.right])
+                .padding(0.1);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.score)])
+                .nice()
+                .range([height - margin.bottom, margin.top]);
+
+            const svg = d3.select('#chart')
+                .append('svg')
+                .attr('viewBox', [0, 0, width, height]);
+
+            svg.append('g')
+                .attr('fill', 'steelblue')
+              .selectAll('rect')
+              .data(data)
+              .join('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.name))
+                .attr('y', d => y(d.score))
+                .attr('height', d => y(0) - y(d.score))
+                .attr('width', x.bandwidth());
+
+            svg.append('g')
+                .attr('transform', `translate(0,${height - margin.bottom})`)
+                .call(d3.axisBottom(x));
+
+            svg.append('g')
+                .attr('transform', `translate(${margin.left},0)`)
+                .call(d3.axisLeft(y));
+        }
+
+        fetchData().then(draw);
+    </script>
+</body>
+</html>
